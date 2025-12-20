@@ -29,6 +29,11 @@
       .interactive:active {
         transform: scale(1.03);
       }
+
+      /* 🌙 Dark mood background */
+      .dark-mood {
+        background: linear-gradient(135deg, #4a1d2f, #7a2e4f, #9f4c6b);
+      }
     </style>
   </head>
 
@@ -59,86 +64,144 @@
     </section>
 
     <!-- 🎤 Singing Challenge Screen -->
-    <section
-    id="singingScreen"
-    class="hidden text-center fade px-6">
+    <section id="singingScreen" class="hidden text-center fade px-6">
+      <p class="text-rose-600 mb-2 text-lg">
+        First I have a challenge for you 💫
+      </p>
 
-    <h2 class="text-3xl md:text-4xl font-bold text-rose-800 mb-6">
+      <h2 class="text-3xl md:text-4xl font-bold text-rose-800 mb-6">
         Sing your favourite song 🎶
-    </h2>
+      </h2>
 
-    <p class="text-rose-700 mb-10">
-        Don’t worry, there’s no judging here 💗
-    </p>
+      <p class="text-rose-700 mb-10">Don’t worry, there’s no judging here 💗</p>
 
-    <!-- Recording Buttons (inactive for now) -->
-    <div class="flex flex-col items-center gap-6">
-
+      <!-- Recording Buttons (inactive for now) -->
+      <div class="flex flex-col items-center gap-6">
         <button
-        id="startRecordingBtn"
-        class="interactive px-8 py-4 rounded-full bg-rose-500 text-white text-lg font-semibold shadow-xl">
-        Start Recording 🎤
+          id="startRecordingBtn"
+          class="interactive px-8 py-4 rounded-full bg-rose-500 text-white text-lg font-semibold shadow-xl"
+        >
+          Start Recording 🎤
         </button>
 
         <button
-        id="stopRecordingBtn"
-        class="interactive px-8 py-4 rounded-full bg-rose-400 text-white text-lg font-semibold shadow-xl hidden">
-        Stop Recording ⏹️
+          id="stopRecordingBtn"
+          class="interactive px-8 py-4 rounded-full bg-rose-400 text-white text-lg font-semibold shadow-xl hidden"
+        >
+          Stop Recording ⏹️
         </button>
+      </div>
 
-    </div>
-
-    <!-- Awesome text (hidden initially) -->
-    <p
+      <!-- Awesome text (hidden initially) -->
+      <p
         id="awesomeText"
-        class="hidden mt-10 text-xl text-rose-800 font-semibold">
+        class="hidden mt-10 text-xl text-rose-800 font-semibold"
+      >
         Awesome ✨
-    </p>
+      </p>
 
-    <!-- Choice Buttons -->
-    <div
+      <!-- Choice Buttons -->
+      <div
         id="celebrateChoices"
-        class="hidden mt-8 flex flex-col md:flex-row gap-6 justify-center">
-
+        class="hidden mt-8 flex flex-col md:flex-row gap-6 justify-center"
+      >
         <button
-        id="celebrateBtn"
-        class="interactive px-8 py-4 rounded-full bg-rose-600 text-white text-lg font-semibold shadow-xl">
-        Let’s Celebrate 🎉
+          id="celebrateBtn"
+          class="interactive px-8 py-4 rounded-full bg-rose-600 text-white text-lg font-semibold shadow-xl"
+        >
+          Let’s Celebrate 🎉
         </button>
 
         <button
-        id="noCelebrateBtn"
-        class="interactive px-8 py-4 rounded-full bg-gray-300 text-gray-700 text-lg font-semibold shadow-xl relative">
-        I don’t wanna 😒
+          id="noCelebrateBtn"
+          class="interactive px-8 py-4 rounded-full bg-gray-300 text-gray-700 text-lg font-semibold shadow-xl relative"
+        >
+          I don’t wanna 😒
         </button>
-
-    </div>
-
+      </div>
     </section>
 
-
     <script>
-        const startBtn = document.getElementById("startBtn");
-        const bgMusic = document.getElementById("bgMusic");
+      let mediaRecorder;
+      let audioChunks = [];
+      let singingAudios = []; // multiple takes stored here
+      let recordingTimeout;
+      const startRecBtn = document.getElementById("startRecordingBtn");
+      const stopRecBtn = document.getElementById("stopRecordingBtn");
+      const awesomeText = document.getElementById("awesomeText");
+      const celebrateChoices = document.getElementById("celebrateChoices");
+      const startBtn = document.getElementById("startBtn");
+      const bgMusic = document.getElementById("bgMusic");
 
-        const welcomeScreen = document.getElementById("welcomeScreen");
-        const singingScreen = document.getElementById("singingScreen");
+      const welcomeScreen = document.getElementById("welcomeScreen");
+      const singingScreen = document.getElementById("singingScreen");
 
-        startBtn.addEventListener("click", async () => {
-            // Fullscreen
-            if (document.documentElement.requestFullscreen) {
-                await document.documentElement.requestFullscreen();
-            }
+      startBtn.addEventListener("click", async () => {
+        if (document.documentElement.requestFullscreen) {
+          await document.documentElement.requestFullscreen();
+        }
 
-            // Start music
-            bgMusic.volume = 0.4;
-            bgMusic.play();
+        bgMusic.volume = 0.4;
+        bgMusic.play();
 
-            // Switch screens
-            welcomeScreen.classList.add("hidden");
-            singingScreen.classList.remove("hidden");
+        welcomeScreen.classList.add("hidden");
+        singingScreen.classList.remove("hidden");
+
+        // 🌙 Darker mood starts here
+        document.body.classList.add("dark-mood");
+      });
+
+      startRecBtn.addEventListener("click", async () => {
+        audioChunks = [];
+
+        // Pause music
+        bgMusic.pause();
+
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
         });
-    </script>
+        mediaRecorder = new MediaRecorder(stream);
 
+        mediaRecorder.start();
+
+        // UI changes
+        startRecBtn.classList.add("hidden");
+        stopRecBtn.classList.remove("hidden");
+
+        // Collect audio
+        mediaRecorder.ondataavailable = (e) => {
+          audioChunks.push(e.data);
+        };
+
+        // ⏱ Stop automatically after 5 minutes
+        recordingTimeout = setTimeout(() => {
+          if (mediaRecorder.state === "recording") {
+            mediaRecorder.stop();
+          }
+        }, 5 * 60 * 1000);
+      });
+
+      stopRecBtn.addEventListener("click", () => {
+        if (!mediaRecorder) return;
+
+        clearTimeout(recordingTimeout);
+        mediaRecorder.stop();
+
+        mediaRecorder.onstop = () => {
+          const audioBlob = new Blob(audioChunks, { type: "audio/webm" });
+          singingAudios.push(audioBlob); // save take
+
+          // Resume music
+          bgMusic.play();
+
+          // UI changes
+          stopRecBtn.classList.add("hidden");
+          startRecBtn.classList.remove("hidden");
+
+          awesomeText.classList.remove("hidden");
+          celebrateChoices.classList.remove("hidden");
+        };
+      });
+    </script>
   </body>
 </html>
