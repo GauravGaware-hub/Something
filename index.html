@@ -102,26 +102,29 @@
 
       <!-- Choice Buttons -->
       <div
-        id="celebrateChoices"
-        class="hidden mt-8 flex flex-col md:flex-row gap-6 justify-center"
+        id="celebrateButtons"
+        class="hidden gap-6 justify-center items-center mt-8 relative"
       >
         <button
           id="celebrateBtn"
-          class="interactive px-8 py-4 rounded-full bg-rose-600 text-white text-lg font-semibold shadow-xl"
+          class="interactive px-8 py-4 rounded-full bg-pink-500 text-white text-lg font-semibold shadow-xl"
         >
           Let’s Celebrate 🎉
         </button>
 
         <button
           id="noCelebrateBtn"
-          class="interactive px-8 py-4 rounded-full bg-gray-300 text-gray-700 text-lg font-semibold shadow-xl relative"
+          class="interactive px-8 py-4 rounded-full bg-gray-300 text-gray-700 text-lg font-semibold shadow-xl"
         >
-          I don’t wanna 😒
+          I don’t wanna 😝
         </button>
       </div>
     </section>
 
     <script>
+      let noBtnX = 0;
+      let noBtnY = 0;
+
       let mediaRecorder;
       let audioChunks = [];
       let singingAudios = []; // multiple takes stored here
@@ -129,7 +132,7 @@
       const startRecBtn = document.getElementById("startRecordingBtn");
       const stopRecBtn = document.getElementById("stopRecordingBtn");
       const awesomeText = document.getElementById("awesomeText");
-      const celebrateChoices = document.getElementById("celebrateChoices");
+      const celebrateButtons = document.getElementById("celebrateButtons");
       const startBtn = document.getElementById("startBtn");
       const bgMusic = document.getElementById("bgMusic");
 
@@ -199,9 +202,36 @@
           startRecBtn.classList.remove("hidden");
 
           awesomeText.classList.remove("hidden");
-          celebrateChoices.classList.remove("hidden");
+          celebrateButtons.classList.remove("hidden");
         };
       });
+
+      const noCelebrateBtn = document.getElementById("noCelebrateBtn");
+
+      noCelebrateBtn.addEventListener("mouseenter", moveNoButton);
+      noCelebrateBtn.addEventListener("touchstart", moveNoButton);
+
+      function moveNoButton() {
+        const btn = noCelebrateBtn;
+        const btnRect = btn.getBoundingClientRect();
+
+        const padding = 20; // keep button away from edges
+
+        const minX = -btnRect.left + padding;
+        const maxX = window.innerWidth - btnRect.right - padding;
+
+        const minY = -btnRect.top + padding;
+        const maxY = window.innerHeight - btnRect.bottom - padding;
+
+        const randomX = Math.random() * (maxX - minX) + minX;
+        const randomY = Math.random() * (maxY - minY) + minY;
+
+        noBtnX += randomX;
+        noBtnY += randomY;
+
+        btn.style.transition = "transform 0.35s ease-out";
+        btn.style.transform = `translate(${noBtnX}px, ${noBtnY}px)`;
+      }
     </script>
   </body>
 </html>
